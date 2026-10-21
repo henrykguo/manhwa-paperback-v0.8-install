@@ -15054,7 +15054,7 @@ var _Sources = (() => {
     async getSearchResults(query, metadata) {
       const previousPage = metadata?.page;
       const page = typeof previousPage === "number" && previousPage > 0 ? previousPage : 1;
-      const url = new URL("search", this.baseUrl);
+      const url = new URL(this.baseUrl);
       url.searchParams.set("s", query.title ?? "");
       url.searchParams.set("post_type", "wp-manga");
       url.searchParams.set("paged", String(page));
@@ -15120,7 +15120,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.1",
+    version: "0.1.2",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
