@@ -637,13 +637,13 @@ var _Sources = (() => {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.HomeSectionType = void 0;
-      var HomeSectionType;
-      (function(HomeSectionType2) {
-        HomeSectionType2["singleRowNormal"] = "singleRowNormal";
-        HomeSectionType2["singleRowLarge"] = "singleRowLarge";
-        HomeSectionType2["doubleRow"] = "doubleRow";
-        HomeSectionType2["featured"] = "featured";
-      })(HomeSectionType = exports.HomeSectionType || (exports.HomeSectionType = {}));
+      var HomeSectionType2;
+      (function(HomeSectionType3) {
+        HomeSectionType3["singleRowNormal"] = "singleRowNormal";
+        HomeSectionType3["singleRowLarge"] = "singleRowLarge";
+        HomeSectionType3["doubleRow"] = "doubleRow";
+        HomeSectionType3["featured"] = "featured";
+      })(HomeSectionType2 = exports.HomeSectionType || (exports.HomeSectionType = {}));
     }
   });
 
@@ -15036,6 +15036,21 @@ var _Sources = (() => {
       }
       return response.data;
     }
+    async getHomePageSections(sectionCallback) {
+      const parsed = parseSearchResults(await this.fetchHTML(this.baseUrl), this.baseUrl);
+      sectionCallback(App.createHomeSection({
+        id: "latest-updates",
+        title: "Latest Updates",
+        type: import_types2.HomeSectionType.singleRowNormal,
+        items: parsed.map((item) => App.createPartialSourceManga({
+          mangaId: item.mangaId,
+          title: item.title,
+          image: item.imageUrl ?? "",
+          subtitle: item.latestChapters[0]?.name ?? item.rating ?? void 0
+        })),
+        containsMoreItems: false
+      }));
+    }
     async getSearchResults(query, metadata) {
       const previousPage = metadata?.page;
       const page = typeof previousPage === "number" && previousPage > 0 ? previousPage : 1;
@@ -15105,7 +15120,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.0",
+    version: "0.1.1",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
@@ -15114,7 +15129,7 @@ var _Sources = (() => {
     contentRating: import_types3.ContentRating.MATURE,
     websiteBaseURL: "https://manhwaus.net/",
     sourceTags: [],
-    intents: import_types3.SourceIntents.MANGA_CHAPTERS
+    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS
   };
   return __toCommonJS(ManhwaUS_exports);
 })();
