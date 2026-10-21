@@ -15172,7 +15172,7 @@ var _Sources = (() => {
         mangaId: item.mangaId,
         title: item.title,
         image: item.imageUrl ?? "",
-        subtitle: item.latestChapters[0]?.name ?? item.rating ?? void 0
+        subtitle: this.chapterLabel(item.latestChapters[0]?.name) ?? item.rating ?? void 0
       });
     }
     async getSearchResults(query, metadata) {
@@ -15185,7 +15185,7 @@ var _Sources = (() => {
           mangaId: item.mangaId,
           title: item.title,
           image: item.imageUrl ?? "",
-          subtitle: item.latestChapters[0]?.name ?? item.rating ?? void 0
+          subtitle: this.chapterLabel(item.latestChapters[0]?.name) ?? item.rating ?? void 0
         })),
         metadata: parsed.length > 0 ? { page: page + 1 } : void 0
       });
@@ -15218,7 +15218,7 @@ var _Sources = (() => {
         return App.createChapter({
           id: chapter.url,
           chapNum,
-          name: chapNum > 0 ? `Chapter ${chapNum}` : chapter.name,
+          name: this.chapterLabel(chapter.name) ?? chapter.name,
           langCode: "en",
           group: "",
           volume: 0,
@@ -15242,11 +15242,16 @@ var _Sources = (() => {
       const match = name.match(/(?:chapter|ch\.?)[\s-]*(\d+(?:\.\d+)?)/i);
       return match ? Number(match[1]) : 0;
     }
+    chapterLabel(name) {
+      if (!name) return void 0;
+      const chapter = this.chapterNumber(name);
+      return chapter > 0 ? `Chapter ${chapter}` : name;
+    }
   };
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.10",
+    version: "0.1.11",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "worryBigBig",
