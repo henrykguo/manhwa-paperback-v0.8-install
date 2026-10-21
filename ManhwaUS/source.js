@@ -14929,6 +14929,47 @@ var _Sources = (() => {
 
   // src/ManhwaUS/Parser.ts
   var BASE_URL = "https://manhwaus.net/";
+  var MONTHS = {
+    jan: 0,
+    feb: 1,
+    mar: 2,
+    apr: 3,
+    may: 4,
+    jun: 5,
+    jul: 6,
+    aug: 7,
+    sep: 8,
+    oct: 9,
+    nov: 10,
+    dec: 11
+  };
+  function parseReleaseDate(raw) {
+    const text3 = raw.trim();
+    const dateParts = /^(\d{1,2})\s+([a-z]{3,})\s+(\d{4})$/i.exec(text3);
+    if (dateParts) {
+      const month = MONTHS[dateParts[2].slice(0, 3).toLowerCase()];
+      if (month !== void 0) {
+        return new Date(Date.UTC(Number(dateParts[3]), month, Number(dateParts[1])));
+      }
+    }
+    const relative = /^(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago$/i.exec(text3);
+    if (relative) {
+      const amount = Number(relative[1]);
+      const unit = relative[2].toLowerCase();
+      const milliseconds = {
+        second: 1e3,
+        minute: 6e4,
+        hour: 36e5,
+        day: 864e5,
+        week: 6048e5,
+        month: 2592e6,
+        year: 31536e6
+      };
+      return new Date(Date.now() - amount * milliseconds[unit]);
+    }
+    const parsed = Date.parse(text3);
+    return Number.isNaN(parsed) ? /* @__PURE__ */ new Date() : new Date(parsed);
+  }
   function resolveUrl(raw, base = BASE_URL) {
     const value = raw?.trim();
     if (!value || value.startsWith("data:") || value.startsWith("javascript:")) return void 0;
@@ -15003,7 +15044,12 @@ var _Sources = (() => {
       }
       return [];
     };
-    const chapters = $2("a.chapter-name").toArray().map((a) => parseLink($2(a), base)).filter((x) => Boolean(x));
+    const chapters = $2("a.chapter-name").toArray().map((a) => {
+      const link = parseLink($2(a), base);
+      if (!link) return void 0;
+      const dateText = $2(a).closest("li").find(".chapter-time").first().text().trim();
+      return { ...link, releaseDate: parseReleaseDate(dateText) };
+    }).filter((x) => Boolean(x));
     const url = absoluteUrl(mangaUrl, base) || mangaUrl;
     return {
       title,
@@ -15141,8 +15187,10 @@ var _Sources = (() => {
         langCode: "en",
         group: "",
         volume: 0,
-        time: /* @__PURE__ */ new Date(0),
-        sortingIndex: index2
+        time: chapter.releaseDate,
+        // Paperback sorts higher sortingIndex values first. The site returns
+        // its chapter list newest-first, so assign the first item the highest index.
+        sortingIndex: details.chapters.length - index2
       }));
     }
     async getChapterDetails(mangaId, chapterId) {
@@ -15162,7 +15210,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.6",
+    version: "0.1.7",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
