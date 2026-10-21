@@ -15042,6 +15042,9 @@ var _Sources = (() => {
       });
       this.baseUrl = "https://manhwaus.net/";
     }
+    async getCloudflareBypassRequestAsync() {
+      return App.createRequest({ url: this.baseUrl, method: "GET" });
+    }
     async fetchHTML(url) {
       const response = await this.requestManager.schedule(
         App.createRequest({ url, method: "GET" }),
@@ -15053,6 +15056,13 @@ var _Sources = (() => {
       return response.data;
     }
     async getHomePageSections(sectionCallback) {
+      sectionCallback(App.createHomeSection({
+        id: "latest-updates",
+        title: "Latest Updates",
+        type: import_types2.HomeSectionType.singleRowNormal,
+        items: [],
+        containsMoreItems: false
+      }));
       const parsed = parseSearchResults(await this.fetchHTML(this.baseUrl), this.baseUrl);
       sectionCallback(App.createHomeSection({
         id: "latest-updates",
@@ -15135,7 +15145,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.4",
+    version: "0.1.5",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
