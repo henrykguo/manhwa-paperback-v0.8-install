@@ -4,6 +4,6 @@ This public repository contains generated installer files for the ManhwaUS Paper
 
 Add this repository to Paperback using:
 
-`https://henrykguo.github.io/manhwa-paperback-v0.8-install/`
+`https://worrybigbig.github.io/manhwa-paperback-v0.8-install/`
 
 Built with `@paperback/types` and `@paperback/toolchain` 0.8.7.

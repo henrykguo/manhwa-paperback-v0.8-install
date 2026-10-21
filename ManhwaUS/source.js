@@ -15210,11 +15210,11 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.7",
+    version: "0.1.8",
     name: "ManhwaUS",
     icon: "icon.png",
-    author: "henrykguo",
-    authorWebsite: "https://github.com/henrykguo",
+    author: "worryBigBig",
+    authorWebsite: "https://github.com/worryBigBig",
     description: "Browse and read ManhwaUS titles.",
     contentRating: import_types3.ContentRating.MATURE,
     websiteBaseURL: "https://manhwaus.net/",
