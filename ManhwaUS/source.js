@@ -15106,6 +15106,12 @@ var _Sources = (() => {
         }
       });
       this.baseUrl = "https://manhwaus.net/";
+      this.browseSections = [
+        { id: "latest-updates", title: "Latest Updates", orderBy: "latest" },
+        { id: "latest-updates-no-raw", title: "Latest Updates (No Raw)", orderBy: "latest", excludeRaw: true },
+        { id: "trending", title: "Trending", orderBy: "trending" },
+        { id: "top-rated", title: "Top Rated", orderBy: "rating" }
+      ];
     }
     async getCloudflareBypassRequestAsync() {
       return App.createRequest({ url: this.baseUrl, method: "GET" });
@@ -15121,26 +15127,53 @@ var _Sources = (() => {
       return response.data;
     }
     async getHomePageSections(sectionCallback) {
-      sectionCallback(App.createHomeSection({
-        id: "latest-updates",
-        title: "Latest Updates",
-        type: import_types2.HomeSectionType.singleRowNormal,
-        items: [],
-        containsMoreItems: false
-      }));
-      const parsed = parseSearchResults(await this.fetchHTML(this.baseUrl), this.baseUrl);
-      sectionCallback(App.createHomeSection({
-        id: "latest-updates",
-        title: "Latest Updates",
-        type: import_types2.HomeSectionType.singleRowNormal,
-        items: parsed.map((item) => App.createPartialSourceManga({
-          mangaId: item.mangaId,
-          title: item.title,
-          image: item.imageUrl ?? "",
-          subtitle: item.latestChapters[0]?.name ?? item.rating ?? void 0
-        })),
-        containsMoreItems: false
-      }));
+      for (const section of this.browseSections) {
+        sectionCallback(App.createHomeSection({
+          id: section.id,
+          title: section.title,
+          type: import_types2.HomeSectionType.singleRowNormal,
+          items: [],
+          containsMoreItems: true
+        }));
+      }
+      const latest = await this.fetchBrowsePage("latest", 1);
+      const trending = await this.fetchBrowsePage("trending", 1);
+      const topRated = await this.fetchBrowsePage("rating", 1);
+      const pages = { latest, trending, rating: topRated };
+      for (const section of this.browseSections) {
+        const items = pages[section.orderBy].filter((item) => !("excludeRaw" in section && section.excludeRaw) || !item.title.trim().toLowerCase().endsWith("raw"));
+        sectionCallback(App.createHomeSection({
+          id: section.id,
+          title: section.title,
+          type: import_types2.HomeSectionType.singleRowNormal,
+          items: items.map((item) => this.toPartialManga(item)),
+          containsMoreItems: true
+        }));
+      }
+    }
+    async getViewMoreItems(homepageSectionId, metadata) {
+      const section = this.browseSections.find((candidate) => candidate.id === homepageSectionId);
+      if (!section) return App.createPagedResults({ results: [], metadata: void 0 });
+      const previousPage = metadata?.page;
+      const page = typeof previousPage === "number" && previousPage > 1 ? previousPage : 2;
+      const parsed = await this.fetchBrowsePage(section.orderBy, page);
+      const results = parsed.filter((item) => !("excludeRaw" in section && section.excludeRaw) || !item.title.trim().toLowerCase().endsWith("raw")).map((item) => this.toPartialManga(item));
+      return App.createPagedResults({
+        results,
+        metadata: parsed.length > 0 ? { page: page + 1 } : void 0
+      });
+    }
+    async fetchBrowsePage(orderBy, page) {
+      const path = page === 1 ? `webtoons/?orderby=${orderBy}` : `webtoons/page/${page}/?orderby=${orderBy}`;
+      return parseSearchResults(await this.fetchHTML(`${this.baseUrl}${path}`), this.baseUrl);
+    }
+    toPartialManga(item) {
+      return App.createPartialSourceManga({
+        mangaId: item.mangaId,
+        title: item.title,
+        image: item.imageUrl ?? "",
+        subtitle: item.latestChapters[0]?.name ?? item.rating ?? void 0
+      });
     }
     async getSearchResults(query, metadata) {
       const previousPage = metadata?.page;
@@ -15210,7 +15243,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.8",
+    version: "0.1.9",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "worryBigBig",
