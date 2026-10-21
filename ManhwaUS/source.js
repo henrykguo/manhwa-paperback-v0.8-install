@@ -15213,18 +15213,21 @@ var _Sources = (() => {
     async getChapters(mangaId) {
       const url = resolveUrl(mangaId, this.baseUrl) ?? mangaId;
       const details = parseMangaDetails(await this.fetchHTML(url), url, this.baseUrl);
-      return details.chapters.map((chapter, index2) => App.createChapter({
-        id: chapter.url,
-        chapNum: this.chapterNumber(chapter.name),
-        name: chapter.name,
-        langCode: "en",
-        group: "",
-        volume: 0,
-        time: chapter.releaseDate,
-        // Paperback sorts higher sortingIndex values first. The site returns
-        // its chapter list newest-first, so assign the first item the highest index.
-        sortingIndex: details.chapters.length - index2
-      }));
+      return details.chapters.map((chapter, index2) => {
+        const chapNum = this.chapterNumber(chapter.name);
+        return App.createChapter({
+          id: chapter.url,
+          chapNum,
+          name: chapNum > 0 ? `Chapter ${chapNum}` : chapter.name,
+          langCode: "en",
+          group: "",
+          volume: 0,
+          time: chapter.releaseDate,
+          // Paperback sorts higher sortingIndex values first. The site returns
+          // its chapter list newest-first, so assign the first item the highest index.
+          sortingIndex: details.chapters.length - index2
+        });
+      });
     }
     async getChapterDetails(mangaId, chapterId) {
       const chapterUrl = resolveUrl(chapterId, this.baseUrl) ?? chapterId;
@@ -15243,7 +15246,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.9",
+    version: "0.1.10",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "worryBigBig",
