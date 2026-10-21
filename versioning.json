@@ -1,0 +1,1 @@
+{"buildTime":"2026-10-21T17:58:26.735Z","sources":[{"id":"ManhwaUS","name":"ManhwaUS","author":"henrykguo","desc":"Browse and read ManhwaUS titles.","website":"https://github.com/henrykguo","contentRating":"MATURE","version":"0.1.0","icon":"icon.png","tags":[],"websiteBaseURL":"https://manhwaus.net/","intents":1}],"builtWith":{"toolchain":"0.8.7","types":"0.8.7"}}
