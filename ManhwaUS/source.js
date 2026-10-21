@@ -14929,17 +14929,36 @@ var _Sources = (() => {
 
   // src/ManhwaUS/Parser.ts
   var BASE_URL = "https://manhwaus.net/";
-  function absoluteUrl(raw, base = BASE_URL) {
+  function resolveUrl(raw, base = BASE_URL) {
     const value = raw?.trim();
     if (!value || value.startsWith("data:") || value.startsWith("javascript:")) return void 0;
-    try {
-      return new URL(value, base).toString();
-    } catch {
-      return void 0;
+    if (/^https?:\/\//i.test(value)) return value;
+    const baseParts = /^(https?:\/\/[^/?#]+)([^?#]*)/i.exec(base);
+    if (!baseParts) return void 0;
+    const origin = baseParts[1];
+    const scheme = /^https:/i.test(origin) ? "https:" : "http:";
+    if (value.startsWith("//")) return `${scheme}${value}`;
+    const suffixIndex = value.search(/[?#]/);
+    const pathPart = suffixIndex < 0 ? value : value.slice(0, suffixIndex);
+    const suffix = suffixIndex < 0 ? "" : value.slice(suffixIndex);
+    const basePath = baseParts[2] || "/";
+    const combinedPath = pathPart.startsWith("/") ? pathPart : `${basePath.slice(0, basePath.lastIndexOf("/") + 1)}${pathPart}`;
+    const segments = [];
+    for (const segment of combinedPath.split("/")) {
+      if (!segment || segment === ".") continue;
+      if (segment === "..") segments.pop();
+      else segments.push(segment);
     }
+    return `${origin}/${segments.join("/")}${suffix}`;
+  }
+  function absoluteUrl(raw, base = BASE_URL) {
+    const value = raw?.trim();
+    if (!value || /^(data|javascript):/i.test(value)) return void 0;
+    return resolveUrl(value, base);
   }
   function idFromUrl(url) {
-    return new URL(url).pathname.replace(/\/+$/, "") + "/";
+    const pathname = url.replace(/^https?:\/\/[^/]+/i, "").split(/[?#]/, 1)[0] || "/";
+    return pathname.replace(/\/+$/, "") + "/";
   }
   function parseLink(element, base) {
     const url = absoluteUrl(element.attr("href"), base);
@@ -15080,10 +15099,8 @@ var _Sources = (() => {
     async getSearchResults(query, metadata) {
       const previousPage = metadata?.page;
       const page = typeof previousPage === "number" && previousPage > 0 ? previousPage : 1;
-      const url = new URL("search/", this.baseUrl);
-      url.searchParams.set("s", query.title ?? "");
-      url.searchParams.set("paged", String(page));
-      const parsed = parseSearchResults(await this.fetchHTML(url.toString()), this.baseUrl);
+      const url = `${this.baseUrl}search/?s=${encodeURIComponent(query.title ?? "")}&paged=${page}`;
+      const parsed = parseSearchResults(await this.fetchHTML(url), this.baseUrl);
       return App.createPagedResults({
         results: parsed.map((item) => App.createPartialSourceManga({
           mangaId: item.mangaId,
@@ -15095,7 +15112,7 @@ var _Sources = (() => {
       });
     }
     async getMangaDetails(mangaId) {
-      const url = new URL(mangaId, this.baseUrl).toString();
+      const url = resolveUrl(mangaId, this.baseUrl) ?? mangaId;
       const details = parseMangaDetails(await this.fetchHTML(url), url, this.baseUrl);
       const tags = details.genres.length > 0 ? [App.createTagSection({
         id: "genres",
@@ -15115,7 +15132,7 @@ var _Sources = (() => {
       return App.createSourceManga({ id: details.mangaId, mangaInfo });
     }
     async getChapters(mangaId) {
-      const url = new URL(mangaId, this.baseUrl).toString();
+      const url = resolveUrl(mangaId, this.baseUrl) ?? mangaId;
       const details = parseMangaDetails(await this.fetchHTML(url), url, this.baseUrl);
       return details.chapters.map((chapter, index2) => App.createChapter({
         id: chapter.url,
@@ -15129,7 +15146,7 @@ var _Sources = (() => {
       }));
     }
     async getChapterDetails(mangaId, chapterId) {
-      const chapterUrl = new URL(chapterId, this.baseUrl).toString();
+      const chapterUrl = resolveUrl(chapterId, this.baseUrl) ?? chapterId;
       const pages = parseChapterPages(await this.fetchHTML(chapterUrl), chapterUrl, this.baseUrl);
       return App.createChapterDetails({
         id: chapterId,
@@ -15145,7 +15162,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.5",
+    version: "0.1.6",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
