@@ -15022,7 +15022,23 @@ var _Sources = (() => {
       super(...arguments);
       this.requestManager = App.createRequestManager({
         requestsPerSecond: 2,
-        requestTimeout: 3e4
+        requestTimeout: 3e4,
+        interceptor: {
+          interceptRequest: async (request) => {
+            request.headers = {
+              ...request.headers,
+              referer: this.baseUrl,
+              "user-agent": await this.requestManager.getDefaultUserAgent()
+            };
+            request.cookies = [App.createCookie({
+              name: "isAdult",
+              value: "1",
+              domain: "manhwaus.net"
+            })];
+            return request;
+          },
+          interceptResponse: async (response) => response
+        }
       });
       this.baseUrl = "https://manhwaus.net/";
     }
@@ -15119,7 +15135,7 @@ var _Sources = (() => {
 
   // src/ManhwaUS/ManhwaUS.ts
   var ManhwaUSInfo = {
-    version: "0.1.3",
+    version: "0.1.4",
     name: "ManhwaUS",
     icon: "icon.png",
     author: "henrykguo",
@@ -15128,7 +15144,7 @@ var _Sources = (() => {
     contentRating: import_types3.ContentRating.MATURE,
     websiteBaseURL: "https://manhwaus.net/",
     sourceTags: [],
-    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS
+    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS | import_types3.SourceIntents.CLOUDFLARE_BYPASS_REQUIRED
   };
   return __toCommonJS(ManhwaUS_exports);
 })();
